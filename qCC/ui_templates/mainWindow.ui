@@ -151,6 +151,7 @@
      <addaction name="actionConvertToRGB"/>
      <addaction name="actionConvertToRandomRGB"/>
      <addaction name="actionRenameSF"/>
+     <addaction name="actionSFSelTool"/>
      <addaction name="separator"/>
      <addaction name="actionAddConstantSF"/>
      <addaction name="actionAddClassificationSF"/>
@@ -2019,6 +2020,18 @@ QTreeView::branch:open:has-children:has-siblings  {
   <action name="actionRenameSF">
    <property name="text">
     <string>Rename</string>
+   </property>
+  </action>
+  <action name="actionSFSelTool">
+   <property name="icon">
+    <iconset resource="../icons.qrc">
+     <normaloff>:/CC/images/smallRectangleSelect.png</normaloff>:/CC/images/smallRectangleSelect.png</iconset>
+   </property>
+   <property name="text">
+    <string>SF Selection Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Interactive Scalar Field Selection and Assignment Tool</string>
    </property>
   </action>
   <action name="actionFitQuadric">

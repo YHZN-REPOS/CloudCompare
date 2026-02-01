@@ -296,6 +296,7 @@ class MainWindow : public QMainWindow
 	void doActionSFConvertToRGB();
 	void doActionSFConvertToRandomRGB();
 	void doActionRenameSF();
+	void doActionSFSelTool();
 	void doActionOpenColorScalesManager();
 	void doActionAddIdField();
 	void doActionSplitCloudUsingSF();

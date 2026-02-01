@@ -18,6 +18,7 @@
 #include "ccGraphicalSegmentationTool.h"
 
 #include "ccGraphicalSegmentationOptionsDlg.h"
+#include "ccSFAssignmentDlg.h"
 
 // Local
 #include "ccItemSelectionDlg.h"
@@ -86,6 +87,7 @@ ccGraphicalSegmentationTool::ccGraphicalSegmentationTool(QWidget* parent)
 	connect(cancelButton, &QToolButton::clicked, this, &ccGraphicalSegmentationTool::cancel);
 	connect(pauseButton, &QToolButton::toggled, this, &ccGraphicalSegmentationTool::pauseSegmentationMode);
 	connect(addClassToolButton, &QToolButton::clicked, this, &ccGraphicalSegmentationTool::setClassificationValue);
+	connect(sfAssignmentButton, &QToolButton::clicked, this, &ccGraphicalSegmentationTool::doSFAssignment);
 
 	// selection modes
 	connect(actionSetPolylineSelection, &QAction::triggered, this, &ccGraphicalSegmentationTool::doSetPolylineSelection);
@@ -103,6 +105,7 @@ ccGraphicalSegmentationTool::ccGraphicalSegmentationTool(QWidget* parent)
 	addOverriddenShortcut(Qt::Key_I);      //'I' key for the "segment in" button
 	addOverriddenShortcut(Qt::Key_O);      //'O' key for the "segment out" button
 	addOverriddenShortcut(Qt::Key_C);      //'C' key for the "classify" button
+	addOverriddenShortcut(Qt::Key_S);      //'S' key for the "SF Assignment" button
 	addOverriddenShortcut(Qt::Key_E);      //'E' key for the "export" button
 	connect(this, &ccOverlayDialog::shortcutTriggered, this, &ccGraphicalSegmentationTool::onShortcutTriggered);
 
@@ -170,6 +173,10 @@ void ccGraphicalSegmentationTool::onShortcutTriggered(int key)
 
 	case Qt::Key_C:
 		setClassificationValue();
+		return;
+
+	case Qt::Key_S:
+		doSFAssignment();
 		return;
 
 	case Qt::Key_E:
@@ -791,6 +798,7 @@ void ccGraphicalSegmentationTool::closeRectangle()
 	else
 	{
 		allowPolylineExport(true);
+		m_segmentationPoly->setClosed(true);
 	}
 
 	// stop
@@ -856,7 +864,7 @@ void ccGraphicalSegmentationTool::exportSelection()
 	segment(true, CCCoreLib::NAN_VALUE, true);
 }
 
-void ccGraphicalSegmentationTool::segment(bool keepPointsInside, ScalarType classificationValue /*=CCCoreLib::NAN_VALUE*/, bool exportSelection /*=false*/)
+void ccGraphicalSegmentationTool::segment(bool keepPointsInside, ScalarType classificationValue /*=CCCoreLib::NAN_VALUE*/, bool exportSelection /*=false*/, const QString& sfName /*="Classification"*/, bool pauseAtEnd /*=true*/)
 {
 	if (!m_associatedWin)
 	{
@@ -870,19 +878,29 @@ void ccGraphicalSegmentationTool::segment(bool keepPointsInside, ScalarType clas
 		return;
 	}
 
-	if (!m_segmentationPoly->isClosed())
+	// auto-close selection if still running
+	if ((m_state & RUNNING) != 0)
+	{
+		if (m_state & POLYLINE)
+		{
+			QPoint mousePos = m_associatedWin->doMapFromGlobal(QCursor::pos());
+			ccLog::Warning(QString("Polyline was not closed - we'll close it with the current mouse cursor position: (%1 ; %2)").arg(mousePos.x()).arg(mousePos.y()));
+			addPointToPolylineExt(mousePos.x(), mousePos.y(), true);
+			closePolyLine(0, 0);
+		}
+		else if (m_state & RECTANGLE)
+		{
+			closeRectangle();
+		}
+	}
+
+	if (m_segmentationPoly && !m_segmentationPoly->isClosed() && m_segmentationPoly->size() >= 2)
+		m_segmentationPoly->setClosed(true);
+
+	if (!m_segmentationPoly || !m_segmentationPoly->isClosed())
 	{
 		ccLog::Error("Define and/or close the segmentation polygon first! (right click to close)");
 		return;
-	}
-
-	// we must close the polyline if we are in RUNNING mode
-	if ((m_state & POLYLINE) != 0 && (m_state & RUNNING) != 0)
-	{
-		QPoint mousePos = m_associatedWin->doMapFromGlobal(QCursor::pos());
-		ccLog::Warning(QString("Polyline was not closed - we'll close it with the current mouse cursor position: (%1 ; %2)").arg(mousePos.x()).arg(mousePos.y()));
-		addPointToPolylineExt(mousePos.x(), mousePos.y(), true);
-		closePolyLine(0, 0);
 	}
 
 	ccGLCameraParameters camera;
@@ -947,12 +965,12 @@ void ccGraphicalSegmentationTool::segment(bool keepPointsInside, ScalarType clas
 				continue;
 			}
 
-			// check that the 'Classification' scalar field exists
-			int sfIdx = pc->getScalarFieldIndexByName("Classification");
+			// check that the target scalar field exists
+			int sfIdx = pc->getScalarFieldIndexByName(sfName.toStdString().c_str());
 			if (sfIdx < 0)
 			{
-				// create the scalar field Classification if needed
-				sfIdx = pc->addScalarField("Classification");
+				// create it if needed
+				sfIdx = pc->addScalarField(sfName.toStdString().c_str());
 				if (sfIdx < 0)
 				{
 					ccLog::Error(tr("Not enough memory"));
@@ -1100,11 +1118,17 @@ void ccGraphicalSegmentationTool::segment(bool keepPointsInside, ScalarType clas
 	}
 	else
 	{
-		m_somethingHasChanged = true;
-		validButton->setEnabled(true);
-		validAndDeleteButton->setEnabled(true);
-		razButton->setEnabled(true);
-		pauseSegmentationMode(true);
+		// if classificationMode is false and exportSelection is false, this is a dry run
+		// (e.g. from doSFAssignment to detect values). In this case we don't want to
+		// mark the tool as 'changed' (which would trigger segmentation on apply).
+		if (pauseAtEnd)
+		{
+			m_somethingHasChanged = true;
+			validButton->setEnabled(true);
+			validAndDeleteButton->setEnabled(true);
+			razButton->setEnabled(true);
+			pauseSegmentationMode(true);
+		}
 	}
 }
 
@@ -1183,6 +1207,63 @@ void ccGraphicalSegmentationTool::setClassificationValue()
 	s_classValue = iValue;
 
 	segment(true, static_cast<ScalarType>(s_classValue));
+}
+
+void ccGraphicalSegmentationTool::doSFAssignment()
+{
+	if (!m_associatedWin)
+	{
+		return;
+	}
+
+	// we must close the polyline/rectangle if we are in RUNNING mode
+	if ((m_state & RUNNING) != 0)
+	{
+		if (m_state & POLYLINE)
+			closePolyLine(0, 0);
+		else if (m_state & RECTANGLE)
+			closeRectangle();
+	}
+
+	if (!m_segmentationPoly || !m_segmentationPoly->isClosed())
+	{
+		ccLog::Error("Define and/or close the segmentation polygon first! (right click to close)");
+		return;
+	}
+
+	// Update visibility selection (dry run to update visibility arrays based on the polyline)
+	// We don't want to pause the tool yet (as it would clear the polyline)
+	segment(true, CCCoreLib::NAN_VALUE, false, "Classification", false);
+
+	ccHObject::Container selectedEntities;
+	selectedEntities.reserve(m_toSegment.size());
+	std::copy(m_toSegment.begin(), m_toSegment.end(), std::back_inserter(selectedEntities));
+
+	ccSFAssignmentDlg dlg(selectedEntities, m_associatedWin->asWidget());
+
+	connect(&dlg, &ccSFAssignmentDlg::applyValue, [this](const QString& sfName, ScalarType value) {
+		// We use pauseAtEnd=false here so that the selection is NOT cleared after applying,
+		// allowing the user to try different values or check results without losing the selection.
+		this->segment(true, value, false, sfName, false);
+
+		// After assignment, we MUST reset the visibility array of all clouds
+		// otherwise the "apply" (green check) will think we want to segment the cloud!
+		for (ccHObject* entity : m_toSegment)
+		{
+			ccGenericPointCloud* cloud = ccHObjectCaster::ToGenericPointCloud(entity);
+			if (cloud)
+			{
+				cloud->resetVisibilityArray();
+			}
+		}
+
+		if (this->m_associatedWin)
+		{
+			this->m_associatedWin->redraw();
+		}
+	});
+
+	dlg.exec();
 }
 
 void ccGraphicalSegmentationTool::doSetPolylineSelection()

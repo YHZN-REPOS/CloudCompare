@@ -265,8 +265,44 @@ If you are compiling and running locally, add `-DCC_MAC_DEV_PATHS` to the `CMAKE
 will look for the plugins in your build directory rather than the application bundle. If you need the shaders as well,
 you will have to create a `shaders` folder in the build directory and copy the shaders you need into it.
 
-For convenience, we provide a 100% self contained build system based on `pixi`. Simply install `pixi` from the [official website](https://pixi.sh) and in the root directory of CC code repository simply launch `pixi run build` and then `pixi run CloudCompare`.
-You can also create a portable (relocatable) `.app` by using `pixi run bundle`. You could find the bundle in `.build/install/CloudCompare` directory.
+### Apple Silicon (M1/M2/M3) and Pixi
+
+For convenience, we provide a 100% self contained build system based on [Pixi](https://pixi.sh). This is the recommended way to build CloudCompare on macOS (especially on Apple Silicon).
+
+1. **Install Pixi**: Follow the instructions on the [Pixi website](https://pixi.sh).
+2. **Configure and Build**: In the root directory of the repository, run:
+   ```bash
+   pixi run build
+   ```
+3. **Run**:
+   ```bash
+   pixi run CloudCompare
+   ```
+
+### Recompiling after code changes
+
+To ensure your changes are correctly picked up and you are not running an old version of the software:
+
+#### 1. Incremental Build (Fast)
+If you only modified `.cpp` or `.h` files, you can simply run:
+```bash
+pixi run build && pixi run install
+```
+This will only recompile the modified files and update the installation.
+
+#### 2. Clean Build (Safe)
+If you modified `CMakeLists.txt` or if the incremental build doesn't seem to work, perform a clean build:
+```bash
+rm -rf .build && pixi run configure && pixi run build && pixi run install
+```
+This deletes all previous build artifacts and ensures a fresh compilation.
+
+#### 3. Creating a portable bundle
+You can create a portable (relocatable) `.app` by using:
+```bash
+pixi run bundle
+```
+The bundle will be located in the `.build/install/CloudCompare` directory.
 
 ## Working with Visual Studio on Windows
 

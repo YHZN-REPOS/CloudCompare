@@ -95,11 +95,14 @@ class ccGraphicalSegmentationTool : public ccOverlayDialog
 	//! Apply segmentation and update the database (helper)
 	bool applySegmentation(ccMainAppInterface* app, ccHObject::Container& newEntities);
 
+	void doSetPolylineSelection();
+	void doSetRectangularSelection();
+
   protected:
 	void        segmentIn();
 	void        segmentOut();
 	void        exportSelection();
-	void        segment(bool keepPointsInside, ScalarType classificationValue = CCCoreLib::NAN_VALUE, bool exportSelection = false);
+	void        segment(bool keepPointsInside, ScalarType classificationValue = CCCoreLib::NAN_VALUE, bool exportSelection = false, const QString& sfName = "Classification", bool pauseAtEnd = true);
 	void        reset();
 	void        options();
 	void        apply();
@@ -117,8 +120,7 @@ class ccGraphicalSegmentationTool : public ccOverlayDialog
 	void stopRunning();
 	void pauseSegmentationMode(bool);
 	void setClassificationValue();
-	void doSetPolylineSelection();
-	void doSetRectangularSelection();
+	void doSFAssignment();
 	void doActionUseExistingPolyline();
 	void doExportSegmentationPolyline();
 

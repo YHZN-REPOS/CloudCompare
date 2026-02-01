@@ -618,6 +618,7 @@ void MainWindow::connectActions()
 	connect(m_UI->actionConvertToRGB, &QAction::triggered, this, &MainWindow::doActionSFConvertToRGB);
 	connect(m_UI->actionConvertToRandomRGB, &QAction::triggered, this, &MainWindow::doActionSFConvertToRandomRGB);
 	connect(m_UI->actionRenameSF, &QAction::triggered, this, &MainWindow::doActionRenameSF);
+	connect(m_UI->actionSFSelTool, &QAction::triggered, this, &MainWindow::doActionSFSelTool);
 	connect(m_UI->actionOpenColorScalesManager, &QAction::triggered, this, &MainWindow::doActionOpenColorScalesManager);
 	connect(m_UI->actionAddIdField, &QAction::triggered, this, &MainWindow::doActionAddIdField);
 	connect(m_UI->actionSplitCloudUsingSF, &QAction::triggered, this, &MainWindow::doActionSplitCloudUsingSF);
@@ -3238,6 +3239,39 @@ void MainWindow::doActionRenameSF()
 		return;
 
 	updateUI();
+}
+
+void MainWindow::doActionSFSelTool()
+{
+	ccGLWindowInterface* win = getActiveGLWindow();
+	if (!win)
+	{
+		return;
+	}
+
+	if (!haveSelection())
+	{
+		return;
+	}
+
+	// Check that we only have point clouds
+	for (ccHObject* entity : getSelectedEntities())
+	{
+		if (!entity->isKindOf(CC_TYPES::POINT_CLOUD))
+		{
+			ccLog::Error("This tool only works on point clouds!");
+			return;
+		}
+	}
+
+	// Start the graphical segmentation tool
+	activateSegmentationMode();
+
+	// Set to polyline selection by default if the tool was started successfully
+	if (m_gsTool)
+	{
+		m_gsTool->doSetPolylineSelection();
+	}
 }
 
 void MainWindow::doActionOpenColorScalesManager()
@@ -11502,6 +11536,7 @@ void MainWindow::enableUIItems(dbTreeSelectionInfo& selInfo)
 	m_UI->actionConvertToRGB->setEnabled(atLeastOneSF);
 	m_UI->actionConvertToRandomRGB->setEnabled(atLeastOneSF);
 	m_UI->actionRenameSF->setEnabled(atLeastOneSF);
+	m_UI->actionSFSelTool->setEnabled(atLeastOneCloud);
 	m_UI->actionAddIdField->setEnabled(atLeastOneCloud);
 	m_UI->actionSplitCloudUsingSF->setEnabled(atLeastOneSF);
 	m_UI->actionComputeStatParams->setEnabled(atLeastOneSF);

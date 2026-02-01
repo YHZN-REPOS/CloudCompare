@@ -1,70 +1,37 @@
-CloudCompare
-============
+# CloudCompare (Personal Extended Version)
 
-Homepage: https://cloudcompare.org
+本项目基于开源点云处理软件 [CloudCompare](https://cloudcompare.org) 进行开发与功能增强。
 
-[![GitHub release](https://img.shields.io/github/release/cloudcompare/trunk.svg)](https://github.com/cloudcompare/trunk/releases)
+## 项目说明
+本项目继承自 CloudCompare 官方版，旨在优化点云处理流程，特别是针对标量场（Scalar Fields）的选择与赋值操作进行了深度定制。
 
-[![Build](https://github.com/CloudCompare/CloudCompare/workflows/Build/badge.svg?branch=master)](https://github.com/CloudCompare/CloudCompare/actions?query=workflow%3ABuild+branch%3Amaster)
+## 新增功能
+### 1. 标量场选择与赋值工具 (SF Selection Tool)
+一种全新的交互式工具，允许用户在可视化界面中直接框选点云区域并分配标量场数值。
+- **启动路径**：菜单栏 `Edit > Scalar fields > SF Selection Tool`
+- **主要特性**：
+    - 支持矩形和多边形选区（默认为多边形）。
+    - 自动探测选区内现有的标量值。
+    - 快捷键 `S`：选区完成后直接弹出赋值对话框。
+    - 自动闭合选区，操作更流畅。
 
+## 编译指南 (macOS M1/M2/M3)
+本项目针对搭载 Apple Silicon 芯片的 Mac 进行了优化，并使用 `pixi` 管理依赖 and 环境，大大简化了编译流程。
 
-Introduction
-------------
+1. **安装 Pixi**: `curl -fsSL https://pixi.sh/install.sh | bash`
+2. **下载依赖并编译**: `pixi run build`
+3. **安装与运行**: `pixi run CloudCompare`
 
-CloudCompare is a 3D point cloud (and triangular mesh) processing software.
-It was originally designed to perform comparison between two 3D points clouds
-(such as the ones obtained with a laser scanner) or between a point cloud and a
-triangular mesh. It relies on an octree structure that is highly optimized for
-this particular use-case. It was also meant to deal with huge point
-clouds (typically more than 10 million points, and up to 120 million with 2 GB
-of memory).
+详细编译细节请参考：[doc/M1_Build_Guide.md](doc/M1_Build_Guide.md)
 
-More on CloudCompare [here](http://en.wikipedia.org/wiki/CloudCompare)
+## 本项目文档索引
+您可以查阅以下文档以获得更多详细信息：
 
-License
-------------
+| 文档名称 | 内容说明 |
+| --- | --- |
+| [M1_Build_Guide.md](doc/M1_Build_Guide.md) | **M1 编译与运行指南**：详细的构建步骤与环境配置。 |
+| [SF_Tool_Manual_CN.md](doc/SF_Tool_Manual_CN.md) | **标量场工具中文手册**：新工具的使用方法、快捷键及常见问题。 |
+| [SF_Tool_Walkthrough.md](doc/SF_Tool_Walkthrough.md) | **技术总结报告**：记录了功能实现的技术细节、代码修改点及 Bug 修复过程。 |
 
-This project is under the GPL license: https://www.gnu.org/licenses/gpl-3.0.html
-
-This means that you can use it as is for any purpose. But if you want to distribute
-it, or if you want to reuse its code or part of its code in a project you distribute,
-you have to comply with the GPL license. In effect, all the code you mix or link with
-CloudCompare's code must be made public as well. **This code cannot be used in a
-closed source software**.
-
-Installation
-------------
-
-Linux:
-- Flathub: https://flathub.org/apps/details/org.cloudcompare.CloudCompare
-  ```
-  flatpak install flathub org.cloudcompare.CloudCompare
-  ```
-
-
-Compilation
------------
-
-Supports: Windows, Linux, and macOS
-
-Refer to the [BUILD.md file](BUILD.md) for up-to-date information.
-
-Basically, you have to:
-- clone this repository
-- install mandatory dependencies (OpenGL,  etc.) and optional ones if you really need them
-(mainly to support particular file formats, or for some plugins)
-- launch CMake (from the trunk root)
-- enjoy!
-
-Contributing to CloudCompare
-----------------------------
-
-If you want to help us improve CloudCompare or create a new plugin you can start by reading this [guide](CONTRIBUTING.md)
-
-Supporting the project
-----------------------
-
-If you want to help us in another way, you can make donations via <a href='https://donorbox.org/support-cloudcompare' target="_blank"><img src="https://donorbox.org/images/red_logo.png"></a> [donorbox](https://donorbox.org/support-cloudcompare)
-
-Thanks!
-
+## 开源协议
+本项目遵循原项目的 **GPL v3.0** 开源协议。
