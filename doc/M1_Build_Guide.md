@@ -33,6 +33,12 @@ pixi run build
 pixi run install
 ```
 
+### D. 打包 (Bundle)
+**关键步骤**：将所有的依赖库（动态库）嵌入到 `.app` 内部，使其成为一个独立的可执行包。
+```bash
+pixi run bundle
+```
+
 ---
 
 ## 3. 启动指令
@@ -47,6 +53,14 @@ pixi run CloudCompare
 ### 方法二：打开安装后的应用包
 ```bash
 open .build/install/CloudCompare/CloudCompare.app
+```
+
+### 方法三：放入“应用程序”文件夹 (推荐)
+如果您希望像常规软件一样在 Launchpad 中启动：
+1. 先执行 `pixi run bundle`。
+2. 将 `.build/install/CloudCompare/CloudCompare.app` 拷贝到 `/Applications`。
+```bash
+cp -R .build/install/CloudCompare/CloudCompare.app /Applications/
 ```
 
 ---
